@@ -2,6 +2,7 @@
   "name": "visualize-us-election",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://fishcharlotte.github.io/DE-homework/",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
