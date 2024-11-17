@@ -4,6 +4,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import trumpData from './polymarket_trump.json';
 import bidenData from './polymarket_biden.json';
 import harrisData from './polymarket_harris.json';
+import eventData from './main_events_by_date.json';
 
 function formatUnixTimestamp(unixTimestamp) {
     const date = new Date(unixTimestamp * 1000); // 将秒转换为毫秒
@@ -170,15 +171,18 @@ export const ChartComponent = props => {
     const [tooltipX, setTooltipX] = useState(0);
     const [tooltipTime, setTooltipTime] = useState(0);
     const [tooltipItems, setTooltipItems] = useState([]);
+    // const [news, setNews] = useState([]);
 
     const chartContainerRef = useRef();
     const toolTipWidth = 96;
 
     useEffect(
         () => {
+            if (!datasets.length) return;
+
             const handleResize = () => {
                 chart.applyOptions({
-                    width: chartContainerRef.current.clientWidth
+                    width: chartContainerRef.current.clientWidth,
                 });
             };
 
@@ -304,46 +308,58 @@ export const ChartComponent = props => {
                 chart.remove();
             };
         },
-        [datasets, props.data]
+        [datasets.length, props.data]
     );
+
+    const handleClick = () => {
+        if (tooltipTime) {
+            const news = eventData.filter(item => item.date === formatUnixTimestamp(tooltipTime));
+            props.setEvent(news);
+        }
+    }
+
 
     return (
         <div
+            onClick={handleClick}
             ref={chartContainerRef}
         >
             {
                 canShowTooltip && (
-                    <div style={{
-                        width: `${toolTipWidth}px`, // 动态插值
-                        height: '300px',
-                        position: 'absolute',
-                        padding: '8px',
-                        boxSizing: 'border-box', // 驼峰命名
-                        fontSize: '12px',
-                        textAlign: 'left',
-                        zIndex: 1000,
-                        top: '100px',
-                        left: tooltipX + 'px',
-                        pointerEvents: 'none',
-                        borderRadius: '4px 4px 0px 0px',
-                        borderBottom: 'none',
-                        boxShadow: '0 2px 5px 0 rgba(117, 134, 150, 0.45)',
-                        background: 'rgba(255, 255, 255, 0.5)', // 修正动态值插入
-                        color: 'black',
-                        borderColor: 'rgba(239, 83, 80, 1)',
-                    }}>
+                    <div
+                         style={{
+                            width: `${toolTipWidth}px`, // 动态插值
+                            height: '300px',
+                            position: 'absolute',
+                            padding: '8px',
+                            boxSizing: 'border-box', // 驼峰命名
+                            fontSize: '12px',
+                            textAlign: 'left',
+                            zIndex: 1000,
+                            top: '100px',
+                            left: tooltipX + 'px',
+                            pointerEvents: 'none',
+                            borderRadius: '4px 4px 0px 0px',
+                            borderBottom: 'none',
+                            boxShadow: '0 2px 5px 0 rgba(117, 134, 150, 0.45)',
+                            background: 'rgba(255, 255, 255, 0.5)', // 修正动态值插入
+                            color: 'black',
+                            borderColor: 'rgba(239, 83, 80, 1)',
+                        }}>
                         {
-                            tooltipItems.map(([key, value, color]) => (
-                                <div>
-                                    <div style={{color: color}}>⬤ {key}</div>
-                                    <div style={{
-                                        fontSize: '24px',
-                                        margin: '4px 0px'
-                                    }}>
-                                        {Math.round(value * 100)}%
+                            tooltipItems.map(([key, value, color]) => {
+                                return (
+                                    <div key={key}>
+                                        <div style={{color: color}}>⬤ {key}</div>
+                                        <div style={{
+                                            fontSize: '24px',
+                                            margin: '4px 0px'
+                                        }}>
+                                            {Math.round(value * 100)}%
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                )
+                            })
                         }
                         <div>
                             {
@@ -359,8 +375,33 @@ export const ChartComponent = props => {
 
 
 const LineChart = (props) => {
+    const [news, setNews] = useState([]);
+
     return (
-        <ChartComponent {...props} data={datasets}></ChartComponent>
+        <>
+            <ChartComponent {...props} data={datasets} setEvent={(events) => setNews(events)} />
+            <div>
+                {
+                    news.length && news.map(item => {
+                        return (
+                            <div key={'item-' + item["date"]}>
+                                {item["date"]}
+                                <ul>
+                                    {
+                                        item["main_events"].map((perNew) => {
+                                            return (
+                                                <li key={perNew}>{perNew}</li>
+                                            )
+                                        })
+                                    }
+                                </ul>
+                            </div>
+                        )
+                    })
+                }
+            </div>
+        </>
+
     );
 };
 
