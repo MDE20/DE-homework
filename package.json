@@ -2,11 +2,12 @@
   "name": "visualize-us-election",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://github.com/MDE20/DE-homework/",
+  "homepage": "https://github.com/MDE20/DE-homework",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "ajv-formats": "^3.0.1",
     "lightweight-charts": "^4.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -36,5 +37,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
   }
 }

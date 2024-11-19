@@ -1,10 +1,11 @@
 import { createChart, ColorType } from 'lightweight-charts';
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import trumpData from './polymarket_trump.json';
 import bidenData from './polymarket_biden.json';
 import harrisData from './polymarket_harris.json';
-import eventData from './main_events_by_date.json';
+import mainEventData from './main_events_by_date.json';
+import impactfulEvents from './modified_file.json';
 
 function formatUnixTimestamp(unixTimestamp) {
     const date = new Date(unixTimestamp * 1000); // 将秒转换为毫秒
@@ -20,388 +21,268 @@ const datasets = [
         data: trumpData,
         title: 'Trump',
         color: 'rgb(234, 101, 85)',
-        markers: [
-            {
-                time: new Date(2024, 6, 13).getTime() / 1000,
-                text: 'Trump Attempt',
-                position: 'belowBar',
-                color: '#f68410',
-                shape: 'arrowUp',
-            },
-            {
-                time: new Date(2024, 6, 15).getTime() / 1000,
-                text: 'Vance as VP',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 7, 15).getTime() / 1000,
-                text: 'VP Debate Set',
-                position: 'belowBar',
-                color: '#f68410',
-                shape: 'arrowUp',
-            },
-            {
-                time: new Date(2024, 7, 23).getTime() / 1000,
-                text: 'Kennedy Backs Trump',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 8, 10).getTime() / 1000,
-                text: 'Trump Debate Loss',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 8, 15).getTime() / 1000,
-                text: 'Trump Attacked',
-                position: 'belowBar',
-                color: '#f68410',
-                shape: 'arrowUp',
-            },
-            {
-                time: new Date(2024, 9, 1).getTime() / 1000,
-                text: 'Vance Debate Win',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 9, 20).getTime() / 1000,
-                text: 'Trump at McD’s',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 9, 30).getTime() / 1000,
-                text: 'Trump Drives Truck',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 10, 1).getTime() / 1000,
-                text: 'Abortion Issue',
-                position: 'belowBar',
-                color: '#f68410',
-                shape: 'arrowUp',
-            },
-        ]
+        markers: [],
     },
     {
         data: bidenData,
         title: 'Biden',
         color: 'rgb(189, 189, 189)',
-        markers: [
-            {
-                time: new Date(2024, 2, 12).getTime() / 1000,
-                text: 'Biden Nominated',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 5, 27).getTime() / 1000,
-                text: 'Biden Debate Loss',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 6, 17).getTime() / 1000,
-                text: 'Biden COVID News',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 6, 18).getTime() / 1000,
-                text: 'Biden Exit Talks',
-                position: 'belowBar',
-                color: '#f68410',
-                shape: 'arrowUp',
-            },
-            {
-                time: new Date(2024, 6, 21).getTime() / 1000,
-                text: 'Biden Exits',
-                position: 'belowBar',
-                color: '#f68410',
-                shape: 'arrowUp',
-            },
-        ],
+        markers: [],
     },
     {
         data: harrisData,
         title: 'Harris',
         color: 'rgb(53, 110, 248)',
-        markers: [
-            {
-                time: new Date(2024, 6, 22).getTime() / 1000,
-                text: 'Harris Enters Race',
-                position: 'aboveBar',
-                color: '#f68410',
-                shape: 'arrowDown',
-            },
-            {
-                time: new Date(2024, 8, 22).getTime() / 1000,
-                text: 'Harris Confirmed',
-                position: 'belowBar',
-                color: '#f68410',
-                shape: 'arrowUp',
-            },
-            {
-                time: new Date(2024, 9, 29).getTime() / 1000,
-                text: 'Biden: Trash Voters',
-                position: 'belowBar',
-                color: '#f68410',
-                shape: 'arrowUp',
-            },
-        ],
-    }
-]
+        markers: [],
+    },
+];
 
-export const ChartComponent = props => {
-    const datasets = props.data;
+
+// 处理主要事件数据并生成标记
+function processMainEventData(eventData, datasets) {
+    eventData.forEach(event => {
+        const eventTime = new Date(event.date).getTime() / 1000;
+        const dataset = datasets.find(ds => ds.title === event.impact_on);
+        if (dataset) {
+            const closestDataPoint = dataset.data.reduce((prev, curr) => 
+                Math.abs(curr.time - eventTime) < Math.abs(prev.time - eventTime) ? curr : prev
+            );
+
+            dataset.markers.push({
+                time: closestDataPoint.time,
+                position: 'inBar',
+                color: dataset.color,
+                shape: 'circle',
+                size: 1.5,
+            });
+        }
+    });
+}
+
+processMainEventData(impactfulEvents, datasets);
+
+const ChartComponent = (props) => {
+    const { data: datasets } = props;
     const [canShowTooltip, setCanShowTooltip] = useState(false);
     const [tooltipX, setTooltipX] = useState(0);
     const [tooltipTime, setTooltipTime] = useState(0);
     const [tooltipItems, setTooltipItems] = useState([]);
-    // const [news, setNews] = useState([]);
-
+    const [tooltipEventTitle, setTooltipEventTitle] = useState('');
+    const [tooltipImage, setTooltipImage] = useState(''); 
     const chartContainerRef = useRef();
-    const toolTipWidth = 96;
+    const toolTipWidth = 256;
 
-    useEffect(
-        () => {
-            if (!datasets.length) return;
+    const formatDate = (timestamp) => {
+        const date = new Date(timestamp * 1000); // 转换为毫秒
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(2); // 取最后两位数
+        return `${day}/${month}/${year}`; // 返回想要的格式
+    };
 
-            const handleResize = () => {
-                chart.applyOptions({
-                    width: chartContainerRef.current.clientWidth,
-                });
+    useEffect(() => {
+        if (!datasets.length) return;
+
+        const chart = createChart(chartContainerRef.current, {
+            layout: {
+                background: { type: ColorType.Solid, color: 'white' },
+                textColor: 'black',
+                attributionLogo: false,
+            },
+            width: chartContainerRef.current.clientWidth,
+            height: 500,
+            priceScale: {
+                autoScale: true,
+            },
+            timeScale: {
+                timeVisible: true,
+                tickMarkFormatter: (time) => {
+                    const date = new Date(time * 1000); // 转换为毫秒
+                    const month = String(date.getMonth() + 1).padStart(2, '0'); // 格式化月份
+                    return month; // 返回格式化后的月份
+                },
+            },
+        });
+
+        const newSeries = datasets.map(dataset => {
+            const lineSeries = chart.addLineSeries({
+                color: dataset.color,
+                lineWidth: 3,
+                priceLineVisible: false,
+                lastValueVisible: false,
+                crossHairMarkerVisible: false,
+            });
+
+            lineSeries.setData(dataset.data);
+            const sortedMarkers = dataset.markers.sort((a, b) => a.time - b.time);
+            lineSeries.setMarkers(sortedMarkers);
+
+            return {
+                series: lineSeries,
+                title: dataset.title,
+                color: dataset.color,
             };
+        });
 
-            const chart = createChart(chartContainerRef.current, {
-                layout: {
-                    background: { type: ColorType.Solid, color: 'white' },
-                    textColor: 'black',
-                    attributionLogo: false,
-                },
-                width: chartContainerRef.current.clientWidth,
-                height: 500,
-            });
+        chart.subscribeCrosshairMove(param => {
+            if (!chartContainerRef.current) return;
 
-            chart.applyOptions({
-                leftPriceScale: {
-                    visible: true,
-                    borderVisible: false,
-                },
-                rightPriceScale: {
-                    visible: false,
-                },
-                crosshair: {
-                    horzLine: {
-                        visible: false,
-                        labelVisible: true,
-                    },
-                    vertLine: {
-                        visible: true,
-                        style: 0,
-                        width: 2,
-                        color: 'rgba(32, 38, 46, 0.1)',
-                        labelVisible: false,
-                    },
-                },
-                grid: {
-                    vertLines: {
-                        visible: false,
-                    },
-                    horzLines: {
-                        visible: false,
-                    },
-                },
-                localization: {
-                    locale: 'en-US',
-                },
-            });
+            if (
+                param.point === undefined ||
+                !param.time ||
+                param.point.x < 0 ||
+                param.point.x > chartContainerRef.current.clientWidth ||
+                param.point.y < 0 ||
+                param.point.y > chartContainerRef.current.clientHeight
+            ) {
+                setCanShowTooltip(false);
+                setTooltipTime(0);
+                setTooltipEventTitle('');
+                setTooltipImage(''); // 隐藏图片
+            } else {
+                setTooltipTime(param.time); // 确保 param.time 是秒
+                setCanShowTooltip(true);
 
-            const newSeries = props.data.map(dataset => {
-                const lineSeries = chart.addLineSeries({
-                    color: dataset.color,
-                    lineWidth: 3,
-                    priceLineVisible: false,
-                    lastValueVisible: false,
-                    crossHairMarkerVisible: false,
-                });
+                const results = [];
+                let foundEvent = false;
 
-                lineSeries.setData(dataset.data);
-                lineSeries.setMarkers(dataset.markers || []);
-                lineSeries.priceScale().applyOptions({
-                    scaleMargins: {
-                        top: 0.3,
-                        bottom: 0.25
+                newSeries.forEach(item => {
+                    const data = param.seriesData.get(item.series);
+                    if (data) {
+                        results.push([item.title, data.value, item.color]);
+
+                        const isValidHover = param.seriesData.has(item.series) && data.value !== undefined;
+
+                        if (isValidHover) {
+                            const formattedParamDate = formatDate(param.time); // 格式化悬浮时间
+                        
+                            const eventInfo = impactfulEvents.find(event => {
+                                const eventDate = formatDate(new Date(event.date).getTime() / 1000); // 格式化事件日期
+                                return eventDate === formattedParamDate; // 比较格式化后的日期
+                            });
+                        
+                            if (eventInfo) {
+                                const match = eventInfo.event.match(/\[(.*?)\]/);
+                                const eventTitle = match ? match[1] : "Unknown Event";
+                                setTooltipEventTitle(`${eventTitle}`);
+                                setTooltipImage(eventInfo.image); // 设置图片
+                                foundEvent = true;
+                            }
+                        }
                     }
                 });
 
-                return {
-                    series: lineSeries,
-                    title: dataset.title,
-                    color: dataset.color,
+                if (!foundEvent) {
+                    setTooltipEventTitle('');
+                    setTooltipImage('');
                 }
+
+                results.sort((a, b) => (b[1] - a[1]));
+                setTooltipItems(results);
+
+                let left = param.point.x;
+                const timeScaleWidth = chart.timeScale().width();
+                const priceScaleWidth = chart.priceScale('left').width();
+                const halfTooltipWidth = toolTipWidth / 2;
+                left += priceScaleWidth - halfTooltipWidth;
+                left = Math.min(left, priceScaleWidth + timeScaleWidth - toolTipWidth);
+                left = Math.max(left, priceScaleWidth);
+                
+                setTooltipX(left);
+            }
+        });
+
+        chart.timeScale().fitContent();
+        const currentChartContainerRef = chartContainerRef.current;
+        window.addEventListener('resize', () => {
+            chart.resize(currentChartContainerRef.clientWidth, 500);
+        });
+
+        return () => {
+            window.removeEventListener('resize', () => {
+                chart.resize(currentChartContainerRef.clientWidth, 500);
             });
-
-            const toolTipWidth = 96;
-
-            chart.subscribeCrosshairMove(param => {
-                if (!chartContainerRef.current) return;
-
-                if (
-                    param.point === undefined ||
-                    !param.time ||
-                    param.point.x < 0 ||
-                    param.point.x > chartContainerRef.current.clientWidth ||
-                    param.point.y < 0 ||
-                    param.point.y > chartContainerRef.current.clientHeight
-                ) {
-                    setCanShowTooltip(false);
-                    setTooltipTime(0);
-                } else {
-                    // time will be in the same format that we supplied to setData.
-                    // thus it will be YYYY-MM-DD
-                    setTooltipTime(param.time);
-                    setCanShowTooltip(true);
-
-                    const results = []
-                    newSeries.forEach(item => {
-                        const data = param.seriesData.get(item.series);
-                        if (data) {
-                            results.push([item.title, data.value, item.color]);
-                        }
-                    })
-                    results.sort((a, b) => (b[1] - a[1]));
-                    setTooltipItems(results);
-
-                    let left = param.point.x; // relative to timeScale
-                    const timeScaleWidth = chart.timeScale().width();
-                    const priceScaleWidth = chart.priceScale('left').width();
-                    const halfTooltipWidth = toolTipWidth / 2;
-                    left += priceScaleWidth - halfTooltipWidth;
-                    left = Math.min(left, priceScaleWidth + timeScaleWidth - toolTipWidth);
-                    left = Math.max(left, priceScaleWidth);
-
-                    setTooltipX(left);
-                }
-            });
-
-            chart.timeScale().fitContent();
-
-            window.addEventListener('resize', handleResize);
-
-            return () => {
-                window.removeEventListener('resize', handleResize);
-
-                chart.remove();
-            };
-        },
-        [datasets.length, props.data]
-    );
+            chart.remove();
+        };
+    }, [datasets, props.data]);
 
     const handleClick = () => {
         if (tooltipTime) {
-            const news = eventData.filter(item => item.date === formatUnixTimestamp(tooltipTime));
+            const news = mainEventData.filter(item => item.date === formatUnixTimestamp(tooltipTime));
             props.setEvent(news);
         }
     }
 
-
     return (
-        <div
-            onClick={handleClick}
-            ref={chartContainerRef}
-        >
-            {
-                canShowTooltip && (
-                    <div
-                         style={{
-                            width: `${toolTipWidth}px`, // 动态插值
-                            height: '300px',
-                            position: 'absolute',
-                            padding: '8px',
-                            boxSizing: 'border-box', // 驼峰命名
-                            fontSize: '12px',
-                            textAlign: 'left',
-                            zIndex: 1000,
-                            top: '100px',
-                            left: tooltipX + 'px',
-                            pointerEvents: 'none',
-                            borderRadius: '4px 4px 0px 0px',
-                            borderBottom: 'none',
-                            boxShadow: '0 2px 5px 0 rgba(117, 134, 150, 0.45)',
-                            background: 'rgba(255, 255, 255, 0.5)', // 修正动态值插入
-                            color: 'black',
-                            borderColor: 'rgba(239, 83, 80, 1)',
-                        }}>
-                        {
-                            tooltipItems.map(([key, value, color]) => {
-                                return (
-                                    <div key={key}>
-                                        <div style={{color: color}}>⬤ {key}</div>
-                                        <div style={{
-                                            fontSize: '24px',
-                                            margin: '4px 0px'
-                                        }}>
-                                            {Math.round(value * 100)}%
-                                        </div>
+        <div onClick={handleClick} ref={chartContainerRef} style={{ position: 'relative' }}>
+            {canShowTooltip && (
+                <div
+                    style={{
+                        width: `${toolTipWidth}px`,
+                        height: 'auto',
+                        position: 'absolute',
+                        padding: '8px',
+                        boxSizing: 'border-box',
+                        fontSize: '12px',
+                        zIndex: 1000,
+                        top: '100px',
+                        left: tooltipX + 'px',
+                        pointerEvents: 'none',
+                        borderRadius: '4px',
+                        boxShadow: '0 2px 5px 0 rgba(117, 134, 150, 0.45)',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        color: 'black',
+                    }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}>
+                            {tooltipItems.map(([key, value, color]) => (
+                                <div key={key}>
+                                    <div style={{ color }}>{`⬤ ${key}`}</div>
+                                    <div style={{ fontSize: '16px', margin: '4px 0px' }}>
+                                        {Math.round(value * 100)}%
                                     </div>
-                                )
-                            })
-                        }
-                        <div>
-                            {
-                                formatUnixTimestamp(tooltipTime)
-                            }
+                                </div>
+                            ))}
                         </div>
+                        {tooltipImage && (
+                            <img 
+                                src={tooltipImage} 
+                                alt="Event" 
+                                style={{ width: '180px', height: '100px', marginLeft: '10px' }} 
+                            />
+                        )}
                     </div>
-                )
-            }
+                    {tooltipEventTitle && (
+                        <div style={{ marginTop: '10px', fontWeight: 'bold' }}>
+                            {tooltipEventTitle}
+                        </div>
+                    )}
+                    
+                </div>
+            )}
         </div>
     );
 };
-
 
 const LineChart = (props) => {
     const [news, setNews] = useState([]);
 
     return (
         <>
-            <ChartComponent {...props} data={datasets} setEvent={(events) => setNews(events)} />
+            <ChartComponent {...props} data={datasets} setEvent={events => setNews(events)} />
             <div>
-                {
-                    news.length && news.map(item => {
-                        return (
-                            <div key={'item-' + item["date"]}>
-                                {item["date"]}
-                                <ul>
-                                    {
-                                        item["main_events"].map((perNew) => {
-                                            return (
-                                                <li key={perNew}>{perNew}</li>
-                                            )
-                                        })
-                                    }
-                                </ul>
-                            </div>
-                        )
-                    })
-                }
+                {news.length > 0 && news.map(item => (
+                    <div key={'item-' + item["date"]}>
+                        {item["date"]}
+                        <ul>
+                            {item["main_events"].map(perNew => (
+                                <li key={perNew}>{perNew}</li>
+                            ))}
+                        </ul>
+                    </div>
+                ))}
             </div>
         </>
-
     );
 };
 
