@@ -94,13 +94,40 @@ const ChartComponent = (props) => {
             priceScale: {
                 autoScale: true,
             },
-            timeScale: {
-                timeVisible: true,
-                tickMarkFormatter: (time) => {
-                    const date = new Date(time * 1000); // 转换为毫秒
-                    const month = String(date.getMonth() + 1).padStart(2, '0'); // 格式化月份
-                    return month; // 返回格式化后的月份
+            
+        });
+
+        chart.applyOptions({
+            leftPriceScale: {
+                visible: true,
+                borderVisible: false,
+            },
+            rightPriceScale: {
+                visible: false,
+            },
+            crosshair: {
+                horzLine: {
+                    visible: false,
+                    labelVisible: true,
                 },
+                vertLine: {
+                    visible: true,
+                    style: 0,
+                    width: 2,
+                    color: 'rgba(32, 38, 46, 0.1)',
+                    labelVisible: false,
+                },
+            },
+            grid: {
+                vertLines: {
+                    visible: false,
+                },
+                horzLines: {
+                    visible: false,
+                },
+            },
+            localization: {
+                locale: 'en-US',
             },
         });
 
@@ -257,7 +284,9 @@ const ChartComponent = (props) => {
                             {tooltipEventTitle}
                         </div>
                     )}
-                    
+                    <div>
+                    {formatDate(tooltipTime)}
+                </div>
                 </div>
             )}
         </div>
